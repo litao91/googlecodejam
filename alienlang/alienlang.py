@@ -39,5 +39,7 @@ def main():
             if(is_match(word.replace('\n', ''), char_lst)):
                 count= count+1
         outfile.write("Case #{0}: {1}".format(j+1, count) +'\n')
+
 if __name__ == "__main__":
     main()
+
