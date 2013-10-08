@@ -43,11 +43,11 @@ int sum_arr(int* arr, int cnt){
 
 void solve_problem(const int* vals, int** picks, int** m_picks,  int sum, int cnt) {
     if(cnt == 0) {
-        for(int i = 0; i < count; i++) {
-            printf("%d", (*picks)[i]);
-        }
-        printf("\n");
         if( sum == 0) {
+            for(int i = 0; i < count; i++) {
+                printf("%d", (*picks)[i]);
+            }
+            printf("\n");
             if(sum_arr(*picks, count) < sum_arr(*m_picks,count)) {
                 for(int i = 0; i < count; i++) {
                     (*m_picks)[i] = (*picks)[i];
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     int* temp = new int[cnt];
     int* picks = new int[cnt];
     for(int i = 0; i < cnt; i++) {
-        picks[i] = INT_MAX;
+        picks[i] = 100;
     }
 
     solve_problem(vals,  &temp, &picks,  sum, cnt);
