@@ -57,12 +57,10 @@ void solve_problem(const int* vals, int** picks, int** m_picks,  int sum, int cn
         return;
     }
 
-    for(int i = cnt-1; i >= 0; i--) {
-        int max_pick = sum/vals[i];
-        for(int j = max_pick; j>=0; j--) {
-            (*picks)[i] = j;
-            solve_problem(vals, picks, m_picks, sum-vals[i]*j, cnt-1);
-        }
+    int max_pick = sum/vals[cnt-1];
+    for(int j = max_pick; j>=0; j--) {
+        (*picks)[cnt-1] = j;
+        solve_problem(vals, picks, m_picks, sum-vals[cnt-1]*j, cnt-1);
     }
 }
 
