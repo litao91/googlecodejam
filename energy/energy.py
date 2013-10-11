@@ -59,10 +59,6 @@ def solve_problem(prob):
 
 
 
-
-
-
-
 def main():
     infile = open(sys.argv[1], 'r')
     outfile = open(sys.argv[2], 'w')
