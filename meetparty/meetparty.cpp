@@ -60,9 +60,14 @@ void solve_problem(const int* blocks, int block_cnt, int** results){
     double mid_y = y_sum/weight_sum;
     //printf("mid (%f, %f)\n", mid_x, mid_y);
     //Find the nearest point to the mid
-    int min_x = -1;
-    int min_y = -1;
-    int min_dist = -1;
+    int* min_x = new int[block_cnt];
+    int* min_y = new int[block_cnt];
+    int* min_dist = new int[block_cnt];
+    for(int i = 0; i < block_cnt; i++) {
+        min_x[i] = -1;
+        min_y[i] = -1;
+        min_dist[i] = -1;
+    }
 
     for(int i = 0; i<block_cnt; i++) {
         int x1 = GET_CELL(blocks, i, 0, 4);
@@ -72,17 +77,24 @@ void solve_problem(const int* blocks, int block_cnt, int** results){
         for(int x = x1; x <= x2; x++) {
             for(int y = y1; y <= y2; y++) {
                 double d = ABS(mid_x-x)+ABS(mid_y-y);
-                if(min_dist < 0 || d < min_dist) {
+                if(min_dist[i] < 0 || d < min_dist[i]) {
                     //printf("%f\n", d);
-                    min_dist = d;
-                    min_x = x;
-                    min_y = y;
+                    min_dist[i] = d;
+                    min_x[i] = x;
+                    min_y[i] = y;
                 }
             }
         }
     }
+    //for(int i =0; i<block_cnt; i++) {
+        //printf("%d,%d\n", min_x[i], min_y[i]);
+    //}
 
-    int dist = 0;
+    int* dist = new int[block_cnt];
+    for(int i =0; i < block_cnt; i++) {
+        dist[i] = 0;
+    }
+
     for(int i = 0; i<block_cnt; i++) {
         int x1 = GET_CELL(blocks, i, 0, 4);
         int y1 = GET_CELL(blocks, i, 1, 4);
@@ -90,13 +102,29 @@ void solve_problem(const int* blocks, int block_cnt, int** results){
         int y2 = GET_CELL(blocks, i, 3, 4);
         for(int x = x1; x <= x2; x++) {
             for(int y = y1; y <= y2; y++) {
-                dist+= ABS(min_x-x)+ABS(min_y-y);
+                for(int j =0; j < block_cnt; j++) {
+                    dist[j]+= ABS(min_x[j]-x)+ABS(min_y[j]-y);
+                }
             }
         }
     }
-    (*results)[0] = min_x;
-    (*results)[1] = min_y;
-    (*results)[2] = dist;
+
+    int min_idx = 0;
+    int m_dist = dist[0];
+    for(int i = 0; i < block_cnt; i++) {
+        //printf("dist(%d,%d): %d\n", min_x[i], min_y[i], dist[i]);
+        if(dist[i] < m_dist) {
+            m_dist = dist[i];
+            min_idx = i;
+        }
+    }
+    (*results)[0] = min_x[min_idx];
+    (*results)[1] = min_y[min_idx];
+    (*results)[2] = dist[min_idx];
+    delete [] min_x;
+    delete [] min_y;
+    delete [] min_dist;
+    delete [] dist;
     //printf("(%d,%d,%d)\n", min_x, min_y, dist);
 }
 
