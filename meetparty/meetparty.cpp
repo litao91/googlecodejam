@@ -2,9 +2,16 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstddef>
+#include <vector>
+#include <algorithm>
 #define GET_CELL(data, i, j, row_size) (data)[i*(row_size)+j]
 #define ABS(val) ((val)>=0?(val):-(val))
-
+typedef long long ll;
+using std::vector;
+using std::iterator;
+using std::pair;
+using std::sort;
+using std::lower_bound;
 void read_problem(FILE*  fp, int* block_cnt, int** blocks ) {
     size_t len = 50;
     ssize_t bytes_read = 0;
@@ -38,94 +45,58 @@ void read_problem(FILE*  fp, int* block_cnt, int** blocks ) {
     }
 }
 
-void solve_problem(const int* blocks, int block_cnt, int** results){
+void solve_problem(const int* blocks, int block_cnt, ll* results){
     //Calculate the mean points
-    int weight_sum = 0;
-    double x_sum = 0;
-    double y_sum = 0;
+    vector<pair<int,int> > v;
+    vector<int> x;
+    vector<int> y;
     for(int i = 0; i < block_cnt; i++) {
         int x1 = GET_CELL(blocks, i, 0, 4);
         int y1 = GET_CELL(blocks, i, 1, 4);
         int x2 = GET_CELL(blocks, i, 2, 4);
         int y2 = GET_CELL(blocks, i, 3, 4);
-        double t_mid_x = ((double)(x1+x2))/2;
-        double t_mid_y = ((double)(y1+y2))/2;
-        int weight = (ABS(x1-x2)+1)*(ABS(y1-y2) + 1);
-        weight_sum+= weight;
-        x_sum += t_mid_x*weight;
-        y_sum += t_mid_y*weight;
-    }
-    //printf("Sum(%f,%f)\n", x_sum, y_sum);
-    double mid_x = x_sum/weight_sum;
-    double mid_y = y_sum/weight_sum;
-    //printf("mid (%f, %f)\n", mid_x, mid_y);
-    //Find the nearest point to the mid
-    int* min_x = new int[block_cnt];
-    int* min_y = new int[block_cnt];
-    int* min_dist = new int[block_cnt];
-    for(int i = 0; i < block_cnt; i++) {
-        min_x[i] = -1;
-        min_y[i] = -1;
-        min_dist[i] = -1;
-    }
-
-    for(int i = 0; i<block_cnt; i++) {
-        int x1 = GET_CELL(blocks, i, 0, 4);
-        int y1 = GET_CELL(blocks, i, 1, 4);
-        int x2 = GET_CELL(blocks, i, 2, 4);
-        int y2 = GET_CELL(blocks, i, 3, 4);
-        for(int x = x1; x <= x2; x++) {
-            for(int y = y1; y <= y2; y++) {
-                double d = ABS(mid_x-x)+ABS(mid_y-y);
-                if(min_dist[i] < 0 || d < min_dist[i]) {
-                    //printf("%f\n", d);
-                    min_dist[i] = d;
-                    min_x[i] = x;
-                    min_y[i] = y;
-                }
+        //printf("%d %d %d %d\n", x1,y1,x2,y2);
+        for(int ix = x1; ix <=x2; ix++) {
+            for(int iy=y1; iy<=y2; iy++) {
+                x.push_back(ix);
+                y.push_back(iy);
+                v.push_back(std::make_pair(ix,iy));
             }
         }
     }
-    //for(int i =0; i<block_cnt; i++) {
-        //printf("%d,%d\n", min_x[i], min_y[i]);
-    //}
-
-    int* dist = new int[block_cnt];
-    for(int i =0; i < block_cnt; i++) {
-        dist[i] = 0;
+    //sort x and y in order w.r.t. their position
+    sort(x.begin(), x.end());
+    sort(y.begin(),y.end());
+    sort(v.begin(), v.end());
+    vector<ll> sum_x;
+    vector<ll> sum_y;
+    sum_x.push_back(0);
+    sum_y.push_back(0);
+    for(int i = 0; i < v.size(); i++) {
+        sum_x.push_back(sum_x.back()+x.at(i));
+        sum_y.push_back(sum_y.back()+y.at(i));
     }
 
-    for(int i = 0; i<block_cnt; i++) {
-        int x1 = GET_CELL(blocks, i, 0, 4);
-        int y1 = GET_CELL(blocks, i, 1, 4);
-        int x2 = GET_CELL(blocks, i, 2, 4);
-        int y2 = GET_CELL(blocks, i, 3, 4);
-        for(int x = x1; x <= x2; x++) {
-            for(int y = y1; y <= y2; y++) {
-                for(int j =0; j < block_cnt; j++) {
-                    dist[j]+= ABS(min_x[j]-x)+ABS(min_y[j]-y);
-                }
-            }
+    ll min_cost = 1ll <<61;
+    vector<pair<int, int> >::iterator it;
+    pair<int, int> min_p;
+    int n = v.size();
+    for(it = v.begin(); it < v.end(); it++) {
+        int pos_x = lower_bound(x.begin(), x.end(), it->first) - x.begin();
+        int pos_y = lower_bound(y.begin(), y.end(), it->second) - y.begin();
+        ll x_cost = ((ll)it->first)*(pos_x+1) - (ll)sum_x.at(pos_x+1) + //sum of the points at the left
+            (ll)sum_x.back() - (ll)sum_x.at(pos_x+1) - (ll)((ll)it->first) * (n-pos_x-1);
+        ll y_cost = ((ll)it->second)*(pos_y+1) - (ll)sum_y.at(pos_y+1) +
+            (ll)sum_y.back() - (ll)sum_y.at(pos_y+1) - (ll)((ll)it->second) *(n-pos_y-1);
+        ll cost = x_cost + y_cost;
+        if(cost < min_cost) {
+            min_cost = cost;
+            min_p = *it;
         }
     }
-
-    int min_idx = 0;
-    int m_dist = dist[0];
-    for(int i = 0; i < block_cnt; i++) {
-        //printf("dist(%d,%d): %d\n", min_x[i], min_y[i], dist[i]);
-        if(dist[i] < m_dist) {
-            m_dist = dist[i];
-            min_idx = i;
-        }
-    }
-    (*results)[0] = min_x[min_idx];
-    (*results)[1] = min_y[min_idx];
-    (*results)[2] = dist[min_idx];
-    delete [] min_x;
-    delete [] min_y;
-    delete [] min_dist;
-    delete [] dist;
-    //printf("(%d,%d,%d)\n", min_x, min_y, dist);
+    results[0] = min_p.first;
+    results[1] = min_p.second;
+    results[2] = min_cost;
 }
 
 int main(int argc, char** argv) {
@@ -144,7 +115,7 @@ int main(int argc, char** argv) {
         int block_cnt = 0;
         int* blocks = NULL;
         read_problem(infile, &block_cnt,  &blocks);
-        int* result = new int[3];
+        ll* result = new ll[3];
         //for(int j = 0; j < block_cnt; j++) {
             //printf("in ln %d : (%d,%d,%d,%d)\n", j,
                     //GET_CELL(blocks, j,0,block_cnt),
@@ -152,8 +123,8 @@ int main(int argc, char** argv) {
                     //GET_CELL(blocks, j,2,block_cnt),
                     //GET_CELL(blocks, j,3,block_cnt));
         //}
-        solve_problem(blocks, block_cnt, &result);
-        fprintf(outfile, "Case #%d: %d %d %d\n", i+1, result[0], result[1], result[2]);
+        solve_problem(blocks, block_cnt, result);
+        fprintf(outfile, "Case #%d: %lld %lld %lld\n", i+1, result[0], result[1], result[2]);
         delete [] blocks;
         delete [] result;
     }
